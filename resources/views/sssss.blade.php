@@ -1,23 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tourism Dashboard</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <!-- Animate.css -->
+@extends('layouts.app')
+@section('contenus')
+
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <!-- Custom CSS -->
+
     <style>
         body {
-            background-image: url('https://example.com/your-background-image.jpg'); /* Change this to your background image */
+            {{-- background-image: url('{{ asset('assets/img/fleuve.jpg')}}'); /* Change this to your background image */ --}}
             background-size: cover;
             background-position: center;
             color: #fff;
         }
         .dashboard {
-            padding: 40px;
+            padding: 5px;
             backdrop-filter: blur(5px);
         }
         .card {
@@ -38,25 +33,54 @@
             background: rgba(0, 0, 0, 0.5);
             border-radius: 0 0 10px 10px;
         }
+        .video-container {
+            position: relative;
+            margin-bottom: 40px;
+        }
+        .video-text {
+            position: absolute;
+            top: 290px;
+            left: 240px;
+            background: rgba(248, 242, 242, 0);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        video {
+            width: 100%;
+            border-radius: 10px;
+        }
     </style>
-</head>
-<body>
+
     <div class="container dashboard">
-        <h1 class="text-center mb-4 animate__animated animate__fadeInDown">Bienvenue sur notre Tableau de Bord Touristique</h1>
+        <div class="page-header min-vh-75 relative">
+            <video autoplay muted loop class="absolute top-0 left-0 w-full h-full object-cover">
+              <source src="{{ asset('assets/img/dasboard.mp4')}}" type="video/mp4">
+            </video>
+            <div class="container">
+              <div class="row">
+                <div class="col-lg-7 text-center mx-auto">
+                  <div class="video-text">
+                    <h1 class="text-white pt-3 mt-n5" style="text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.7);">Découvrez de Nouveaux Horizons</h1>
+                  <p class="lead text-white mt-3" style="text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.7);">Explorez les destinations les plus belles du monde avec nos circuits conçus par des experts. <br /> Rejoignez-nous et créez des souvenirs inoubliables.</p>
+                </div>
+                </div>
+              </div>
+            </div>
+        </div>
         <div class="row">
             <div class="col-md-4">
-                <div class="card animate__animated animate__fadeInLeft">
-                    <img class="card-img-top" src="./assets/img/destination1.jpg" alt="Destination 1">
+                <div class="card animate__animated animate__fadeInUp">
+                    <img class="card-img-top" src="{{ asset('assets/img/fleuve.jpg')}}" alt="Destination 2">
                     <div class="card-body">
                         <h5 class="card-title">Destination 1</h5>
-                        <p class="card-text">Découvrez la beauté de notre première destination, un endroit idéal pour vos vacances.</p>
+                        <p class="card-text">Venez explorer cette destination incroyable aux paysages à couper le souffle.</p>
                         <a href="#" class="btn btn-light">Explorer</a>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card animate__animated animate__fadeInUp">
-                    <img class="card-img-top" src="./assets/img/destination2.jpg" alt="Destination 2">
+                    <img class="card-img-top" src="{{ asset('assets/img/hotel.jpg')}}" alt="Destination 2">
                     <div class="card-body">
                         <h5 class="card-title">Destination 2</h5>
                         <p class="card-text">Venez explorer cette destination incroyable aux paysages à couper le souffle.</p>
@@ -66,7 +90,7 @@
             </div>
             <div class="col-md-4">
                 <div class="card animate__animated animate__fadeInRight">
-                    <img class="card-img-top" src="./assets/img/destination3.jpg" alt="Destination 3">
+                    <img class="card-img-top" src="{{ asset('assets/img/moniment.jpg')}}" alt="Destination 3">
                     <div class="card-body">
                         <h5 class="card-title">Destination 3</h5>
                         <p class="card-text">Une destination riche en culture et en aventure, parfaite pour les explorateurs.</p>
@@ -76,8 +100,5 @@
             </div>
         </div>
     </div>
-    <!-- Bootstrap JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js" integrity="sha384-eMNCOe7tC1doHpGoJtKh7z7lGz7fuP4F8nfdFvAOA6Gg/z6Y5J6XqqyGXYM2ntX5" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
-</body>
-</html>
+
+@endsection
