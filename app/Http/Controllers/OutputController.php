@@ -138,51 +138,41 @@ class OutputController extends Controller
 {  
     // Récupérer toutes les compagnies pour le dropdown  
     $compagnies = Compagnie::all();  
-
-    // Initialisation d'un tableau pour stocker les compagnies avec leurs enregistrements  
     $companiesWithRecords = [];  
 
-    // Récupération des enregistrements de Vactivite et Cacircuit  
+    // Récupération des enregistrements filtrés s'ils existent  
     $vactivitesQuery = Vactivite::query();  
     $cacircuitsQuery = Cacircuits::query();  
 
-    // Filtrer par année si présent  
     if ($request->has('annee') && $request->annee) {  
         $vactivitesQuery->whereYear('created_at', $request->annee);  
         $cacircuitsQuery->whereYear('created_at', $request->annee);  
     }  
 
-    // Filtrer par compagnie si présent  
     if ($request->has('compagnie_id') && $request->compagnie_id) {  
         $vactivitesQuery->where('compagnie_id', $request->compagnie_id);  
         $cacircuitsQuery->where('compagnie_id', $request->compagnie_id);  
     }  
 
-    // Récupérer les enregistrements filtrés  
     $vactivites = $vactivitesQuery->get();  
     $cacircuits = $cacircuitsQuery->get();  
 
-    // Récupérer et vérifier les compagnies  
     foreach ($compagnies as $compagnie) {  
-        // Vérifier les enregistrements de cette compagnie  
         $vactivitesEntries = $vactivites->where('compagnie_id', $compagnie->id);  
         $cacircuitsEntries = $cacircuits->where('compagnie_id', $compagnie->id);  
 
-        // Regrouper par mois  
-        $groupedVactivites = $vactivitesEntries->groupBy(function ($item) {  
-            return \Carbon\Carbon::parse($item->created_at)->format('Y-m'); // Année-Mois  
-        });  
+        // Vérifier si la compagnie a au moins un enregistrement  
+        $hasRecords = $vactivitesEntries->isNotEmpty() || $cacircuitsEntries->isNotEmpty();  
 
-        $groupedCacircuits = $cacircuitsEntries->groupBy(function ($item) {  
-            return \Carbon\Carbon::parse($item->created_at)->format('Y-m'); // Année-Mois  
-        });  
-
-        // Si la compagnie a des enregistrements dans l'une des tables, on l'ajoute au tableau  
-        if ($groupedVactivites->isNotEmpty() || $groupedCacircuits->isNotEmpty()) {  
+        if ($hasRecords) {  
             $companiesWithRecords[] = [  
                 'compagnie' => $compagnie,  
-                'grouped_vactivites' => $groupedVactivites,  
-                'grouped_cacircuits' => $groupedCacircuits,  
+                'grouped_vactivites' => $vactivitesEntries->groupBy(function ($item) {  
+                    return \Carbon\Carbon::parse($item->created_at)->format('Y-m');  
+                }),  
+                'grouped_cacircuits' => $cacircuitsEntries->groupBy(function ($item) {  
+                    return \Carbon\Carbon::parse($item->created_at)->format('Y-m');  
+                }),  
             ];  
         }  
     }  
@@ -221,29 +211,43 @@ class OutputController extends Controller
         return view('output.userwork', compact('users', 'cacircuits', 'cabilletteries'));
     }
 
-    public function userRecordsById($id)  
-    {  
-        // Pagination des enregistrements Activité, Billets, Emploi, etc.  
-        $activite = Activite::where('users_id', $id)->latest()->paginate(3);  
-        $nbbilletcompa = Billetsaerienne::where('users_id', $id)->latest()->paginate(3);  
-        $emploi = Emploi::where('users_id', $id)->latest()->paginate(3);  
-        $nbbilletdests = Nbbilletdests::where('users_id', $id)->latest()->paginate(3);  
-        $vactivite = Vactivite::where('users_id', $id)->latest()->paginate(3);  
-        $zone = Zone::where('users_id', $id)->latest()->paginate(3);  
+    public function userRecordsById($compagnieId, Request $request)  
+{  
+    // Récupérer la compagnie par ID  
+    $compagnie = Compagnie::find($compagnieId);  
+    if (!$compagnie) {  
+        return redirect()->back()->with('error', 'Compagnie non trouvée.');  
+    }  
 
-        // Récupérer les enregistrements Cacircuits et Cabilletteries de l'utilisateur par ID  
-        $cacircuits = Cacircuits::where('users_id', $id)->latest()->paginate(3);  
-        $cabilletteries = Cabilletteries::where('users_id', $id)->latest()->paginate(3);  
+    // Récupérer les mois disponibles pour le filtre  
+    $moisDisponibles = Vactivite::select('mois')->distinct()->pluck('mois');  
 
-        // Récupérer toutes les compagnies  
-        $compagnie = Compagnie::all();  
+    // Récupérer les enregistrements basés sur l'ID de la compagnie  
+    $vactivitesQuery = Vactivite::where('compagnie_id', $compagnie->id);  
+    $cacircuitsQuery = Cacircuits::where('compagnie_id', $compagnie->id);  
 
-        // Récupérer l'utilisateur pour l'affichage  
-        $user = User::find($id);  
+    // Appliquer le filtre d'année si spécifié  
+    if ($request->has('annee') && $request->annee) {  
+        $vactivitesQuery->whereYear('created_at', $request->annee);  
+        $cacircuitsQuery->whereYear('created_at', $request->annee);  
+    }  
 
-        return view('output.user_details', compact('user', 'cacircuits', 'cabilletteries', 'compagnie',   
-                                'vactivite', 'zone','nbbilletdests', 'nbbilletcompa','activite', 'emploi'));  
-    }
+    // Appliquer le filtre de mois si spécifié  
+    if ($request->has('mois') && $request->mois) {  
+        $vactivitesQuery->where('mois', $request->mois);  
+        $cacircuitsQuery->where('mois', $request->mois);  
+    }  
+
+    // Exécuter les requêtes pour obtenir les résultats filtrés  
+    $vactivite = $vactivitesQuery->latest()->paginate(3);  
+    $cacircuits = $cacircuitsQuery->latest()->paginate(3);  
+
+    // Récupération d'autres enregistrements similaires  
+    $activite = Activite::where('compagnie_id', $compagnie->id)->latest()->paginate(3);  
+    // Autres récupérations ...  
+
+    return view('output.user_details', compact('compagnie', 'cacircuits', 'vactivite', 'activite', 'moisDisponibles'));  
+}
 
 
     // public function showUserRecords(Request $request)
